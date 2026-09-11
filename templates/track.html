@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body p-4">
+                <h2 class="card-title mb-4">Track Your Application</h2>
+                
+                {% if error %}
+                    <div class="alert alert-danger">{{ error }}</div>
+                {% endif %}
+                
+                <form action="/status/" method="GET" onsubmit="trackApp(event)">
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control form-control-lg" 
+                               id="app_id" placeholder="Enter Application ID" required>
+                        <button class="btn btn-primary" type="submit">
+                            Track Status
+                        </button>
+                    </div>
+                </form>
+                
+                <p class="small text-muted">
+                    Enter your Application ID (e.g., APP-20241108-1234) to check the status of your application.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function trackApp(e) {
+    e.preventDefault();
+    const appId = document.getElementById('app_id').value;
+    window.location.href = `/status/${appId}`;
+}
+</script>
+{% endblock %}
+```
+
+Create `templates/status.html`:
+
+```html
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body p-4">
+                <h3 class="mb-4">Application Status</h3>
+                
+                <!-- Application ID -->
+                <div class="alert alert-info">
+                    <strong>Application ID:</strong> {{ app.app_id }}
+                </div>
+                
+                <!-- Status Badge -->
+                <div class="text-center mb-4">
+                    {% if app.status == 'APPROVED' %}
+                        <span class="badge bg-success" style="font-size: 1.5rem; padding: 1rem 2rem;">
+                            ✓ APPROVED
+                        </span>
+                    {% elif app.status == 'REJECTED' %}
+                        <span class="badge bg-danger" style="font-size: 1.5rem; padding: 1rem 2rem;">
+                            ✗ REJECTED
+                        </span>
+                    {% else %}
+                        <span class="badge bg-warning" style="font-size: 1.5rem; padding: 1rem 2rem;">
+                            ⏳ UNDER REVIEW
+                        </span>
+                    {% endif %}
+                </div>
+                
+                <!-- Applicant Details -->
+                <h5 class="mt-4">Applicant Details</h5>
+                <table class="table table-bordered">
+                    <tr>
+                        <th>Name</th>
+                        <td>{{ app.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Income</th>
+                        <td>₹{{ "{:,}".format(app.income) }}/year</td>
+                    </tr>
+                    <tr>
+                        <th>Family Size</th>
+                        <td>{{ app.family_size }} members</td>
+                    </tr>
+                    <tr>
+                        <th>Age</th>
+                        <td>{{ app.age }} years</td>
+                    </tr>
+                </table>
+                
+                <!-- AI Analysis -->
+                <h5 class="mt-4">AI Analysis</h5>
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <p><strong>Decision:</strong> 
+                            <span class="badge {% if app.ai_decision == 'APPROVED' %}bg-success{% elif app.ai_decision == 'REJECTED' %}bg-danger{% else %}bg-warning{% endif %}">
+                                {{ app.ai_decision }}
+                            </span>
+                        </p>
+                        <p><strong>Confidence:</strong> {{ "%.1f"|format(app.ai_confidence) }}%</p>
+                        
+                        <p class="mb-2"><strong>Reasoning:</strong></p>
+                        <ul>
+                            {% for reason in app.ai_reasoning %}
+                                <li>{{ reason }}</li>
+                            {% endfor %}
+                        </ul>
+                        
+                        {% if app.fraud_flags|length > 0 %}
+                            <div class="alert alert-warning mt-3">
+                                <strong>⚠ Fraud Flags:</strong>
+                                <ul class="mb-0">
+                                    {% for flag in app.fraud_flags %}
+                                        <li>{{ flag }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Timeline -->
+                <h5 class="mt-4">Timeline</h5>
+                <div class="timeline">
+                    <div class="alert alert-success">
+                        <strong>✓ Submitted:</strong> {{ app.created_at }}
+                    </div>
+                    <div class="alert alert-success">
+                        <strong>✓ AI Review:</strong> Completed
+                    </div>
+                    {% if app.reviewed_at %}
+                        <div class="alert alert-success">
+                            <strong>✓ Officer Review:</strong> {{ app.reviewed_at }}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-secondary">
+                            <strong>⏳ Officer Review:</strong> Pending
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="d-grid gap-2 mt-4">
+                    <a href="/track" class="btn btn-outline-secondary">Track Another</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

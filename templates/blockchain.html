@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="mb-4">Blockchain Ledger</h2>
+
+<!-- Chain Info -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h6>Total Blocks</h6>
+                <h3>{{ info.total_blocks }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card {% if info.is_valid %}bg-success{% else %}bg-danger{% endif %} text-white">
+            <div class="card-body">
+                <h6>Chain Valid</h6>
+                <h3>{% if info.is_valid %}✓ YES{% else %}✗ NO{% endif %}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h6>Latest Hash</h6>
+                <p class="small"><code>{{ info.latest_block_hash[:16] }}...</code></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Blockchain -->
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Block Explorer</h5>
+        
+        {% for block in chain|reverse %}
+            <div class="card mb-3 {% if loop.first %}border-primary{% endif %}">
+                <div class="card-header d-flex justify-content-between">
+                    <span><strong>Block #{{ block.block_index }}</strong></span>
+                    <span class="text-muted small">{{ block.timestamp }}</span>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>Hash:</strong></p>
+                    <p class="font-monospace small">{{ block.hash }}</p>
+                    
+                    <p class="mb-1"><strong>Previous Hash:</strong></p>
+                    <p class="font-monospace small">{{ block.previous_hash }}</p>
+                    
+                    <p class="mb-1"><strong>Nonce:</strong> {{ block.nonce }}</p>
+                    
+                    <p class="mb-1"><strong>Data:</strong></p>
+                    <div class="bg-light p-2 rounded">
+                        <pre class="mb-0 small">{{ block.data | tojson(indent=2) }}</pre>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
